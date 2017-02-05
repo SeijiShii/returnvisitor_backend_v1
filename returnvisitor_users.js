@@ -5,7 +5,8 @@
 // password varchar(40)
 
 var _client;
-var util = require('util');
+var crypto = require('crypto'),
+  sha256sum = crypto.createHash('sha256');
 
 function ReturnVisitorUsers(client) {
   _client = client;
@@ -43,11 +44,7 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
   // callback(null, err);
 }
 
-// POSTが成功すればPOSTしたデータをオブジェクトで返す
-ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) {
-  // post_user_test実装前
-  callback(null, null);
-}
+
 
 ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
   // 実装前テスト処理
@@ -113,6 +110,30 @@ ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, cal
     }
   });
 
+}
+
+// POSTが成功すればPOSTしたデータをオブジェクトで返す
+ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) {
+  // post_user_test実装前
+  // callback(null, null);
+  // post_user_test実装後
+
+  // generate user_id
+  var date = new Date();
+  var dateString = date.toString();
+  var idSeed = user_name + '_' + dateString;
+  console.log('idSeed: ' + idSeed);
+  sha256sum.update(idSeed);
+  var user_id = sha256sum.digest('hex');
+  console.log('user_id: ' + user_id);
+
+  var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '" );'
+  console.log(queryPostData);
+  _client.query(queryPostData, function(err, rows){
+    if (rows.info.numRows == 1) {
+      ReturnVisitorUsers.prototype.getUser(user_name, password, callback);
+    }
+  });
 }
 
 module.exports = ReturnVisitorUsers;
