@@ -5,8 +5,7 @@
 // password varchar(40)
 
 var _client;
-var crypto = require('crypto'),
-  sha256sum = crypto.createHash('sha256');
+var crypto = require('crypto');
 
 function ReturnVisitorUsers(client) {
   _client = client;
@@ -15,6 +14,7 @@ function ReturnVisitorUsers(client) {
 
 ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
 
+  console.log('getUser called!');
   var queryGetData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND password = "' + password + '";';
   console.log(queryGetData);
   _client.query(queryGetData, function(err, rows){
@@ -50,15 +50,19 @@ ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
   // 実装前テスト処理
   // データは存在するがfalseを返す
   // callback(false);
+  console.log('hasUser called!');
+  console.log('Checking user with name: ' + user_name);
 
   var queryHasData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '";';
   _client.query(queryHasData, function(err, rows){
 
+    console.log('In callback in hasUser:');
     console.dir(rows);
 
     var result = false;
     if (rows.info.numRows >= 1) {
       result = true;
+      console.log('Has user with name: ' + user_name);
     }
     callback(result);
   });
@@ -116,24 +120,47 @@ ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, cal
 ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) {
   // post_user_test実装前
   // callback(null, null);
-  // post_user_test実装後
 
-  // generate user_id
-  var date = new Date();
-  var dateString = date.toString();
-  var idSeed = user_name + '_' + dateString;
-  console.log('idSeed: ' + idSeed);
-  sha256sum.update(idSeed);
-  var user_id = sha256sum.digest('hex');
-  console.log('user_id: ' + user_id);
+  // post_duplicate_user_test実装後
+  ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
+    console.log('result for has check: ' + result);
+    if (result) {
+      var err = {};
+      err.message = 'Has duplicate named user.';
+      console.log(err.message);
+      callback(null, err);
+    } else {
+      // post_user_test実装後
 
-  var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '" );'
-  console.log(queryPostData);
-  _client.query(queryPostData, function(err, rows){
-    if (rows.info.numRows == 1) {
-      ReturnVisitorUsers.prototype.getUser(user_name, password, callback);
+      // generate user_id
+      var date = new Date();
+      var dateString = date.getTime().toString();
+      var idSeed = user_name + '_' + password + '_' + dateString;
+      console.log('idSeed: ' + idSeed);
+
+      var sha256sum = crypto.createHash('sha256');
+      sha256sum.update(idSeed, 'utf8');
+      var user_id = sha256sum.digest('hex');
+      console.log('user_id: ' + user_id);
+
+      var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '" );'
+      console.log(queryPostData);
+      _client.query(queryPostData, function(err, rows){
+        // console.dir(rows);
+        // console.dir(err);
+        // console.log(rows.info.affectedRows);
+        // console.log(rows.info.affectedRows == 1);
+        // console.log('user_name: ' + user_name);
+        // console.log('password: ' + password);
+        if (rows.info.affectedRows == 1) {
+          ReturnVisitorUsers.prototype.getUser(user_name, password, callback);
+        }
+      });
+      _client.end();
     }
   });
+
+
 }
 
 module.exports = ReturnVisitorUsers;
