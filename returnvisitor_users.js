@@ -5,7 +5,6 @@
 // password varchar(40)
 
 var _client;
-var crypto = require('crypto');
 
 function ReturnVisitorUsers(client) {
   _client = client;
@@ -135,12 +134,7 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
       // generate user_id
       var date = new Date();
       var dateString = date.getTime().toString();
-      var idSeed = user_name + '_' + password + '_' + dateString;
-      console.log('idSeed: ' + idSeed);
-
-      var sha256sum = crypto.createHash('sha256');
-      sha256sum.update(idSeed, 'utf8');
-      var user_id = sha256sum.digest('hex');
+      var user_id = 'user_id_' + user_name + '_' + dateString;
       console.log('user_id: ' + user_id);
 
       var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '" );'
@@ -159,8 +153,24 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
       _client.end();
     }
   });
+}
 
+ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_name, new_password, callback) {
+  // put_test実装前
+  // callback(null, null);
 
+  // put_test実装後
+  var queryUpdateData = 'UPDATE returnvisitor_db.users SET user_name = "' + new_user_name + '", password = "' + new_password + '" WHERE user_name = "' + user_name + '" AND password = "' + password + '";';
+  console.log(queryUpdateData);
+
+  _client.query(queryUpdateData, function(err, rows){
+    console.dir(err);
+
+    if (rows.info.affectedRows == 1) {
+      ReturnVisitorUsers.prototype.getUser(new_user_name, new_password, callback);
+    }
+  });
+  _client.end();
 }
 
 module.exports = ReturnVisitorUsers;
