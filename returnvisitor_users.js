@@ -58,19 +58,21 @@ ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
     console.log('In callback in hasUser:');
     console.dir(rows);
 
-    var result = false;
     if (rows.info.numRows >= 1) {
-      result = true;
       console.log('Has user with name: ' + user_name);
+      callback(true);
+    } else {
+      console.log('Does not have user with name: ' + user_name);
+      callback(false);
     }
-    callback(result);
   });
   _client.end();
 }
 
 ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, callback) {
 
-  var result = false;
+  // var result = false;
+  // callback(result, data, message);
 
   ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
 
@@ -82,9 +84,8 @@ ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, cal
     // no_such_user_test後
     if (!result) {
       // ユーザー名がヒットしない
-      var err = {};
-      err.message = 'No such user.'
-      callback(null, err);
+      var message = 'No such user.'
+      callback(false, null, message);
     } else {
       // wrong_password_test実装前
       // var err = {};
@@ -99,14 +100,13 @@ ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, cal
           // callback(authResult, null);
 
           // auth_result_test実装後
-          var authResult = true;
-          console.log('Auth result: ' + authResult);
-          callback(authResult, null);
+          var message = 'Auth result: TRUE';
+          console.log(message);
+          callback(true, data, message);
         } else {
-          var err1 = {};
-          err1.message = 'Has such user but password is wrong.'
-          console.log(err1.message);
-          callback(false, err1);
+          var message = 'Has such user but password is wrong.'
+          console.log(message);
+          callback(false, null, message);
         }
 
       });
@@ -156,21 +156,52 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
 }
 
 ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_name, new_password, callback) {
-  // put_test実装前
+  // no_such_user_test実装前
   // callback(null, null);
+  // return;
 
-  // put_test実装後
-  var queryUpdateData = 'UPDATE returnvisitor_db.users SET user_name = "' + new_user_name + '", password = "' + new_password + '" WHERE user_name = "' + user_name + '" AND password = "' + password + '";';
-  console.log(queryUpdateData);
+  // no_such_user_test実装後
+  ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
 
-  _client.query(queryUpdateData, function(err, rows){
-    console.dir(err);
+    if (!result) {
+      // ユーザー名がヒットしない
+      var err = {};
+      err.message = 'No such user.'
+      callback(null, err);
+      return;
+    } else {
 
-    if (rows.info.affectedRows == 1) {
-      ReturnVisitorUsers.prototype.getUser(new_user_name, new_password, callback);
+      // put_wrong_password_test実装前
+      // callback(null, null);
+      // return;
+
+      // put_wrong_password_test実装後
+      ReturnVisitorUsers.prototype.isAuthenticated(user_name, password, function(result, data, message){
+        if (!result) {
+          var err = {};
+          err.message = message;
+          callback(null, err);
+        } else {
+          // put_test実装前
+          // callback(null, null);
+
+          // put_test実装後
+          var queryUpdateData = 'UPDATE returnvisitor_db.users SET user_name = "' + new_user_name + '", password = "' + new_password + '" WHERE user_name = "' + user_name + '" AND password = "' + password + '";';
+          console.log(queryUpdateData);
+
+          _client.query(queryUpdateData, function(err, rows){
+            console.dir(err);
+
+            if (rows.info.affectedRows == 1) {
+              ReturnVisitorUsers.prototype.getUser(new_user_name, new_password, callback);
+            }
+          });
+          _client.end();
+        }
+      });
+      return;
     }
   });
-  _client.end();
 }
 
 module.exports = ReturnVisitorUsers;
