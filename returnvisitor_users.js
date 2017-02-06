@@ -18,18 +18,20 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
   console.log(queryGetData);
   _client.query(queryGetData, function(err, rows){
     console.dir(rows);
-    if (rows.info.numRows <= 0) {
-      var err = {};
-      err.message = 'No such data.'
-      callback(null, err);
-    } else if(rows.info.numRows == 1){
-      // データが1件だけの時のみデータを返す。
-      var user = rows[0];
-      callback(user, null);
-    } else {
-      var err = {};
-      err.message = 'Has multiple rows with the data.'
-      callback(null, err);
+    if (rows) {
+      if (rows.info.numRows <= 0) {
+        var err = {};
+        err.message = 'No such data.'
+        callback(null, err);
+      } else if(rows.info.numRows == 1){
+        // データが1件だけの時のみデータを返す。
+        var user = rows[0];
+        callback(user, null);
+      } else {
+        var err = {};
+        err.message = 'Has multiple rows with the data.'
+        callback(null, err);
+      }
     }
   })
   _client.end();
@@ -46,13 +48,14 @@ ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
 
     console.log('In callback in hasUser:');
     console.dir(rows);
-
-    if (rows.info.numRows >= 1) {
-      console.log('Has user with name: ' + user_name);
-      callback(true);
-    } else {
-      console.log('Does not have user with name: ' + user_name);
-      callback(false);
+    if (rows) {
+      if (rows.info.numRows >= 1) {
+        console.log('Has user with name: ' + user_name);
+        callback(true);
+      } else {
+        console.log('Does not have user with name: ' + user_name);
+        callback(false);
+      }
     }
   });
   _client.end();
@@ -105,8 +108,10 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
       var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '" );'
       console.log(queryPostData);
       _client.query(queryPostData, function(err, rows){
-        if (rows.info.affectedRows == 1) {
-          ReturnVisitorUsers.prototype.getUser(user_name, password, callback);
+        if (rows) {
+          if (rows.info.affectedRows == 1) {
+            ReturnVisitorUsers.prototype.getUser(user_name, password, callback);
+          }
         }
       });
       _client.end();
@@ -135,9 +140,10 @@ ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_na
 
           _client.query(queryUpdateData, function(err, rows){
             console.dir(err);
-
-            if (rows.info.affectedRows == 1) {
-              ReturnVisitorUsers.prototype.getUser(new_user_name, new_password, callback);
+            if(rows) {
+              if (rows.info.affectedRows == 1) {
+                ReturnVisitorUsers.prototype.getUser(new_user_name, new_password, callback);
+              }
             }
           });
           _client.end();
@@ -146,6 +152,50 @@ ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_na
       return;
     }
   });
+}
+
+ReturnVisitorUsers.prototype.deleteUser = function(user_name, password, callback) {
+  console.dir(callback);
+  // no_such_user_test実装前
+  // callback(null, null);
+
+  // no_such_user_test実装後
+  // ユーザー名の存在確認
+  ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
+    if (!result) {
+      var message = 'No such user.'
+      callback(false, message);
+    } else {
+        // wrong_password_test実装前
+        // callback(null, null);
+
+        // wrong_password_test実装後
+        // パスワードの照合
+          ReturnVisitorUsers.prototype.isAuthenticated(user_name, password, function(result, data, message){
+            if (!result) {
+              callback(false, message);
+            } else {
+              // delete_test実装前
+              // callback(null, null);
+
+              // delete_test実装後
+              // 実際に削除
+              var queryDeleteData = 'DELETE FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND password = "' + password + '";'
+              console.log(queryDeleteData);
+              _client.query(queryDeleteData, function(err, rows){
+                if (rows) {
+                  if (rows.info.affectedRows == 1) {
+                    var message = 'Successfully deleted data.'
+                    console.log(message);
+                    callback(true, message);
+                  }
+                }
+              });
+              _client.end();
+            }
+          });
+    }
+  })
 }
 
 module.exports = ReturnVisitorUsers;
