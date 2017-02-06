@@ -40,21 +40,23 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
 
 
 ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
+
+  // callback(result, message)
   console.log('hasUser called!');
   console.log('Checking user with name: ' + user_name);
 
   var queryHasData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '";';
   _client.query(queryHasData, function(err, rows){
 
-    console.log('In callback in hasUser:');
-    console.dir(rows);
     if (rows) {
       if (rows.info.numRows >= 1) {
-        console.log('Has user with name: ' + user_name);
-        callback(true);
+        var message = 'Has user with name: ' + user_name
+        console.log(message);
+        callback(true, message);
       } else {
-        console.log('Does not have user with name: ' + user_name);
-        callback(false);
+        var message = 'Does not have user with name: ' + user_name;
+        console.log(message);
+        callback(false, message);
       }
     }
   });
@@ -65,11 +67,9 @@ ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, cal
 
   // callback(result, data, message);
 
-  ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
+  ReturnVisitorUsers.prototype.hasUser(user_name, function(result, message){
 
     if (!result) {
-      // ユーザー名がヒットしない
-      var message = 'No such user.'
       callback(false, null, message);
     } else {
       ReturnVisitorUsers.prototype.getUser(user_name, password, function(data, err){
@@ -91,8 +91,10 @@ ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, cal
 
 // POSTが成功すればPOSTしたデータをオブジェクトで返す
 ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) {
-  ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
-    console.log('result for has check: ' + result);
+
+  // callback(data, err)
+
+  ReturnVisitorUsers.prototype.hasUser(user_name, function(result, message){
     if (result) {
       var err = {};
       err.message = 'Has duplicate named user.';
@@ -120,12 +122,12 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
 }
 
 ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_name, new_password, callback) {
-  ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
+  ReturnVisitorUsers.prototype.hasUser(user_name, function(result, message){
 
     if (!result) {
       // ユーザー名がヒットしない
       var err = {};
-      err.message = 'No such user.'
+      err.message = message
       callback(null, err);
       return;
     } else {
@@ -156,44 +158,34 @@ ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_na
 
 ReturnVisitorUsers.prototype.deleteUser = function(user_name, password, callback) {
   console.dir(callback);
-  // no_such_user_test実装前
-  // callback(null, null);
 
-  // no_such_user_test実装後
   // ユーザー名の存在確認
-  ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
+  ReturnVisitorUsers.prototype.hasUser(user_name, function(result, message){
     if (!result) {
-      var message = 'No such user.'
       callback(false, message);
     } else {
-        // wrong_password_test実装前
-        // callback(null, null);
 
-        // wrong_password_test実装後
-        // パスワードの照合
-          ReturnVisitorUsers.prototype.isAuthenticated(user_name, password, function(result, data, message){
-            if (!result) {
-              callback(false, message);
-            } else {
-              // delete_test実装前
-              // callback(null, null);
+      // パスワードの照合
+      ReturnVisitorUsers.prototype.isAuthenticated(user_name, password, function(result, data, message){
+        if (!result) {
+          callback(false, message);
+        } else {
 
-              // delete_test実装後
-              // 実際に削除
-              var queryDeleteData = 'DELETE FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND password = "' + password + '";'
-              console.log(queryDeleteData);
-              _client.query(queryDeleteData, function(err, rows){
-                if (rows) {
-                  if (rows.info.affectedRows == 1) {
-                    var message = 'Successfully deleted data.'
-                    console.log(message);
-                    callback(true, message);
-                  }
-                }
-              });
-              _client.end();
+          // 実際に削除
+          var queryDeleteData = 'DELETE FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND password = "' + password + '";'
+          console.log(queryDeleteData);
+          _client.query(queryDeleteData, function(err, rows){
+            if (rows) {
+              if (rows.info.affectedRows == 1) {
+                var message = 'Successfully deleted data.'
+                console.log(message);
+                callback(true, message);
+              }
             }
           });
+          _client.end();
+        }
+      });
     }
   })
 }
