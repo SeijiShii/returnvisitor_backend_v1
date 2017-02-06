@@ -33,22 +33,11 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
     }
   })
   _client.end();
-
-
-  // this.client.query()
-
-  // no_data実装前テスト用処理
-  // var err = {};
-  // err.message = 'Method not yet implemented.'
-  // callback(null, err);
 }
 
 
 
 ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
-  // 実装前テスト処理
-  // データは存在するがfalseを返す
-  // callback(false);
   console.log('hasUser called!');
   console.log('Checking user with name: ' + user_name);
 
@@ -71,35 +60,17 @@ ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
 
 ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, callback) {
 
-  // var result = false;
   // callback(result, data, message);
 
   ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
 
-    // no_such_user_test前
-    // var error = {};
-    // error.message = 'No such user error not yet implemented';
-    // callback(false, error);
-
-    // no_such_user_test後
     if (!result) {
       // ユーザー名がヒットしない
       var message = 'No such user.'
       callback(false, null, message);
     } else {
-      // wrong_password_test実装前
-      // var err = {};
-      // err.message = 'Wrong password test not yet implemented.'
-      // callback(null, err);
-
-      // wrong_password_test実装後
       ReturnVisitorUsers.prototype.getUser(user_name, password, function(data, err){
         if (data) {
-          // var authResult = false;
-          // auth_result_test実装前
-          // callback(authResult, null);
-
-          // auth_result_test実装後
           var message = 'Auth result: TRUE';
           console.log(message);
           callback(true, data, message);
@@ -117,10 +88,6 @@ ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, cal
 
 // POSTが成功すればPOSTしたデータをオブジェクトで返す
 ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) {
-  // post_user_test実装前
-  // callback(null, null);
-
-  // post_duplicate_user_test実装後
   ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
     console.log('result for has check: ' + result);
     if (result) {
@@ -129,8 +96,6 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
       console.log(err.message);
       callback(null, err);
     } else {
-      // post_user_test実装後
-
       // generate user_id
       var date = new Date();
       var dateString = date.getTime().toString();
@@ -140,12 +105,6 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
       var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '" );'
       console.log(queryPostData);
       _client.query(queryPostData, function(err, rows){
-        // console.dir(rows);
-        // console.dir(err);
-        // console.log(rows.info.affectedRows);
-        // console.log(rows.info.affectedRows == 1);
-        // console.log('user_name: ' + user_name);
-        // console.log('password: ' + password);
         if (rows.info.affectedRows == 1) {
           ReturnVisitorUsers.prototype.getUser(user_name, password, callback);
         }
@@ -156,11 +115,6 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
 }
 
 ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_name, new_password, callback) {
-  // no_such_user_test実装前
-  // callback(null, null);
-  // return;
-
-  // no_such_user_test実装後
   ReturnVisitorUsers.prototype.hasUser(user_name, function(result){
 
     if (!result) {
@@ -170,22 +124,12 @@ ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_na
       callback(null, err);
       return;
     } else {
-
-      // put_wrong_password_test実装前
-      // callback(null, null);
-      // return;
-
-      // put_wrong_password_test実装後
       ReturnVisitorUsers.prototype.isAuthenticated(user_name, password, function(result, data, message){
         if (!result) {
           var err = {};
           err.message = message;
           callback(null, err);
         } else {
-          // put_test実装前
-          // callback(null, null);
-
-          // put_test実装後
           var queryUpdateData = 'UPDATE returnvisitor_db.users SET user_name = "' + new_user_name + '", password = "' + new_password + '" WHERE user_name = "' + user_name + '" AND password = "' + password + '";';
           console.log(queryUpdateData);
 
