@@ -14,7 +14,7 @@ function ReturnVisitorUsers(client) {
 ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
 
   console.log('getUser called!');
-  var queryGetData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND password = "' + password + '";';
+  var queryGetData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND password = "' + password + '" AND delete_flag = false ;';
   console.log(queryGetData);
   _client.query(queryGetData, function(err, rows){
     console.dir(rows);
@@ -22,6 +22,7 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
       if (rows.info.numRows <= 0) {
         var err = {};
         err.message = 'No such data.'
+        console.log(err.message);
         callback(null, err);
       } else if(rows.info.numRows == 1){
         // データが1件だけの時のみデータを返す。
@@ -30,6 +31,7 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
       } else {
         var err = {};
         err.message = 'Has multiple rows with the data.'
+        console.log(err.message);
         callback(null, err);
       }
     }
@@ -37,15 +39,13 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
   _client.end();
 }
 
-
-
 ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
 
   // callback(result, message)
   console.log('hasUser called!');
   console.log('Checking user with name: ' + user_name);
 
-  var queryHasData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '";';
+  var queryHasData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND delete_flag = false;';
   _client.query(queryHasData, function(err, rows){
 
     if (rows) {
@@ -107,9 +107,10 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
       var user_id = 'user_id_' + user_name + '_' + dateString;
       console.log('user_id: ' + user_id);
 
-      var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '" );'
+      var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id, updated_at) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '",' + new Date().getTime().toString() + ' );'
       console.log(queryPostData);
       _client.query(queryPostData, function(err, rows){
+        console.dir(err);
         if (rows) {
           if (rows.info.affectedRows == 1) {
             ReturnVisitorUsers.prototype.getUser(user_name, password, callback);
@@ -137,7 +138,7 @@ ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_na
           err.message = message;
           callback(null, err);
         } else {
-          var queryUpdateData = 'UPDATE returnvisitor_db.users SET user_name = "' + new_user_name + '", password = "' + new_password + '" WHERE user_name = "' + user_name + '" AND password = "' + password + '";';
+          var queryUpdateData = 'UPDATE returnvisitor_db.users SET user_name = "' + new_user_name + '", password = "' + new_password + '", updated_at = ' + new Date().getTime().toString() + ' WHERE user_name = "' + user_name + '" AND password = "' + password + '";';
           console.log(queryUpdateData);
 
           _client.query(queryUpdateData, function(err, rows){
@@ -171,10 +172,10 @@ ReturnVisitorUsers.prototype.deleteUser = function(user_name, password, callback
           callback(false, message);
         } else {
 
-          // 実際に削除
-          var queryDeleteData = 'DELETE FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND password = "' + password + '";'
-          console.log(queryDeleteData);
-          _client.query(queryDeleteData, function(err, rows){
+          // 削除(delete_flagをTRUEにする)
+          var queryDeleteTrue = 'UPDATE returnvisitor_db.users SET delete_flag = true, updated_at = ' + new Date().getTime().toString() + ' WHERE user_name = "' + user_name + '" AND password = "' + password + '";'
+          console.log(queryDeleteTrue);
+          _client.query(queryDeleteTrue, function(err, rows){
             if (rows) {
               if (rows.info.affectedRows == 1) {
                 var message = 'Successfully deleted data.'
