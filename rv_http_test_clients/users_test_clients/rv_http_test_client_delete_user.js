@@ -2,16 +2,14 @@ var request = require('request');
 var should = require('should');
 
 var options = {
-  method: 'PUT',
+  method: 'DELETE',
   url: 'http://localhost:1337/users',
   json: true,
   headers: {
     'Content-type': 'application/json'
   },
-  body: {user_name: 'seijishii',
-          password: 'hogehoge',
-          new_user_name: 'kintaro',
-          new_password: 'fuwafuwa'}
+  body: { user_name: 'kintaro',
+          password: 'fuwafuwa'}
 };
 
 request(options, function (error, response, body) {
@@ -20,10 +18,8 @@ request(options, function (error, response, body) {
   // console.dir(error);
   // console.dir(response);
 
-  var user = body;
-
   try{
-    user.user_name.should.equal('kintaro');
+    response.statusCode.should.equal(200);
   } catch(err){
     console.log('--- AssertionError ---');
     console.log(err);
@@ -32,12 +28,13 @@ request(options, function (error, response, body) {
   }
 
   try{
-    user.password.should.equal('fuwafuwa');
+    body.message.should.equal('Successfully deleted data.');
   } catch(err){
     console.log('--- AssertionError ---');
     console.log(err);
     console.log('--- stack trace ---');
     console.log(err.stack);
   }
+
 
 })

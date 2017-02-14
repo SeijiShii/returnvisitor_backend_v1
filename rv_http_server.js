@@ -32,6 +32,9 @@ var server = http.createServer(function(req, res){
     case 'PUT':
       doPut(req, res, pathArray);
       break;
+    case 'DELETE':
+      doDelete(req, res, pathArray);
+      break;
     default:
       res.writeHead(404, {'Content-type': 'text/plain'});
       res.end('Not Found: Not yet implemented method: ' + req.method);
@@ -159,6 +162,47 @@ var doPutUser = function(req, res) {
     });
   });
 }
+
+var doDelete = function(req, res, pathArray) {
+  // リソースで振り分ける
+  var resourceRootName = pathArray.shift();
+  // console.log(resourceName);
+  switch (resourceRootName) {
+    case 'users':
+      doDeleteUser(req, res);
+      break;
+    default:
+      res.writeHead(404, {'Content-type': 'text/plain'});
+      res.end('Not Found: Not yet implemented resource: ' + resourceRootName + ' in PUT method.');
+  }
+}
+
+var doDeleteUser = function(req, res) {
+  // bodyをゲット
+  var body = [];
+  req.on('data', function(chunk){
+    body.push(chunk);
+  }).on('end', function(){
+    body = Buffer.concat(body).toString();
+    // console.log('body: ' + body);
+    var user = JSON.parse(body);
+    // console.dir(user);
+    // console.log('user.user_name: ' + user.user_name);
+    // console.log('user.password: ' + user.password);
+
+    users.deleteUser(user.user_name, user.password, function(result, message){
+
+      var body = {};
+      body.message = message;
+
+      res.writeHead(200, {'Content-type': 'application/json'})
+      var jsonString = JSON.stringify(body);
+      console.log('jsonString: ' + jsonString);
+      res.end(jsonString);
+    });
+  });
+}
+
 
 server.listen(port, function(){
   console.log('Server listening on: ' + port);
