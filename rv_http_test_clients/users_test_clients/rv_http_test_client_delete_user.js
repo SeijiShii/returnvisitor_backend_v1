@@ -8,8 +8,8 @@ var options = {
   headers: {
     'Content-type': 'application/json'
   },
-  body: { user_name: 'kintaro',
-          password: 'fuwafuwa'}
+  body: { user_name: 'kunisada',
+          password: 'mogomogo'}
 };
 
 request(options, function (error, response, body) {

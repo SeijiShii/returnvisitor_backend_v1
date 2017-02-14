@@ -193,4 +193,103 @@ ReturnVisitorUsers.prototype.deleteUser = function(user_name, password, callback
   })
 }
 
+ReturnVisitorUsers.prototype.doGetUser = function(req, res, query) {
+
+  console.dir(query);
+
+  var user_name = query.user_name;
+  console.log('user_name: ' + user_name);
+
+  var password = query.password;
+  console.log('password: ' + password);
+
+  ReturnVisitorUsers.prototype.getUser(user_name, password, function(data, err){
+    console.log('data in getUser callback: ');
+    console.dir(data);
+
+    res.writeHead(200, {'Content-type': 'application/json'})
+    var jsonString = JSON.stringify(data);
+    console.log('jsonString: ' + jsonString);
+    res.end(jsonString);
+  });
+}
+
+ReturnVisitorUsers.prototype.doPostUser = function(req, res) {
+  // bodyをゲット
+  var body = [];
+  req.on('data', function(chunk){
+    body.push(chunk);
+  }).on('end', function(){
+    body = Buffer.concat(body).toString();
+    // console.log('body: ' + body);
+    var user = JSON.parse(body);
+    // console.dir(user);
+    // console.log('user.user_name: ' + user.user_name);
+    // console.log('user.password: ' + user.password);
+
+    ReturnVisitorUsers.prototype.postUser(user.user_name, user.password, function(data, err){
+
+      console.log('data in postUser callback: ');
+      console.dir(data);
+
+      res.writeHead(200, {'Content-type': 'application/json'})
+      var jsonString = JSON.stringify(data);
+      console.log('jsonString: ' + jsonString);
+      res.end(jsonString);
+    });
+  });
+}
+
+ReturnVisitorUsers.prototype.doPutUser = function(req, res) {
+  // bodyをゲット
+  var body = [];
+  req.on('data', function(chunk){
+    body.push(chunk);
+  }).on('end', function(){
+    body = Buffer.concat(body).toString();
+    // console.log('body: ' + body);
+    var user = JSON.parse(body);
+    // console.dir(user);
+    // console.log('user.user_name: ' + user.user_name);
+    // console.log('user.password: ' + user.password);
+
+    ReturnVisitorUsers.prototype.putUser(user.user_name, user.password, user.new_user_name, user.new_password, function(data, err){
+
+      console.log('data in putUser callback: ');
+      console.dir(data);
+
+      res.writeHead(200, {'Content-type': 'application/json'})
+      var jsonString = JSON.stringify(data);
+      console.log('jsonString: ' + jsonString);
+      res.end(jsonString);
+    });
+  });
+}
+
+ReturnVisitorUsers.prototype.doDeleteUser = function(req, res) {
+  // bodyをゲット
+  var body = [];
+  req.on('data', function(chunk){
+    body.push(chunk);
+  }).on('end', function(){
+    body = Buffer.concat(body).toString();
+    // console.log('body: ' + body);
+    var user = JSON.parse(body);
+    // console.dir(user);
+    // console.log('user.user_name: ' + user.user_name);
+    // console.log('user.password: ' + user.password);
+
+    ReturnVisitorUsers.prototype.deleteUser(user.user_name, user.password, function(result, message){
+
+      var body = {};
+      body.message = message;
+
+      res.writeHead(200, {'Content-type': 'application/json'})
+      var jsonString = JSON.stringify(body);
+      console.log('jsonString: ' + jsonString);
+      res.end(jsonString);
+    });
+  });
+}
+
 module.exports = ReturnVisitorUsers;

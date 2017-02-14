@@ -10,8 +10,8 @@ var options = {
   },
   body: {user_name: 'seijishii',
           password: 'hogehoge',
-          new_user_name: 'kintaro',
-          new_password: 'fuwafuwa'}
+          new_user_name: 'kunisada',
+          new_password: 'mogomogo'}
 };
 
 request(options, function (error, response, body) {
@@ -23,7 +23,7 @@ request(options, function (error, response, body) {
   var user = body;
 
   try{
-    user.user_name.should.equal('kintaro');
+    user.user_name.should.equal('kunisada');
   } catch(err){
     console.log('--- AssertionError ---');
     console.log(err);
@@ -32,7 +32,7 @@ request(options, function (error, response, body) {
   }
 
   try{
-    user.password.should.equal('fuwafuwa');
+    user.password.should.equal('mogomogo');
   } catch(err){
     console.log('--- AssertionError ---');
     console.log(err);

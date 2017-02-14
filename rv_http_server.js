@@ -40,8 +40,6 @@ var server = http.createServer(function(req, res){
       res.end('Not Found: Not yet implemented method: ' + req.method);
       break;
   }
-
-
 });
 
 var doGet = function(req, res, pathArray, query) {
@@ -52,33 +50,12 @@ var doGet = function(req, res, pathArray, query) {
   // console.log(resourceName);
   switch (resourceRootName) {
     case 'users':
-      doGetUser(req, res, query);
+      users.doGetUser(req, res, query);
       break;
     default:
       res.writeHead(404, {'Content-type': 'text/plain'});
       res.end('Not Found: Not yet implemented resource: ' + resourceRootName + ' in GET method.');
   }
-}
-
-var doGetUser = function(req, res, query) {
-
-  console.dir(query);
-
-  var user_name = query.user_name;
-  console.log('user_name: ' + user_name);
-
-  var password = query.password;
-  console.log('password: ' + password);
-
-  users.getUser(user_name, password, function(data, err){
-    console.log('data in getUser callback: ');
-    console.dir(data);
-
-    res.writeHead(200, {'Content-type': 'application/json'})
-    var jsonString = JSON.stringify(data);
-    console.log('jsonString: ' + jsonString);
-    res.end(jsonString);
-  });
 }
 
 var doPost = function(req, res, pathArray) {
@@ -89,38 +66,12 @@ var doPost = function(req, res, pathArray) {
   // console.log(resourceName);
   switch (resourceRootName) {
     case 'users':
-      doPostUser(req, res);
+      users.doPostUser(req, res);
       break;
     default:
       res.writeHead(404, {'Content-type': 'text/plain'});
       res.end('Not Found: Not yet implemented resource: ' + resourceRootName + ' in POST method.');
   }
-}
-
-var doPostUser = function(req, res) {
-  // bodyをゲット
-  var body = [];
-  req.on('data', function(chunk){
-    body.push(chunk);
-  }).on('end', function(){
-    body = Buffer.concat(body).toString();
-    // console.log('body: ' + body);
-    var user = JSON.parse(body);
-    // console.dir(user);
-    // console.log('user.user_name: ' + user.user_name);
-    // console.log('user.password: ' + user.password);
-
-    users.postUser(user.user_name, user.password, function(data, err){
-
-      console.log('data in postUser callback: ');
-      console.dir(data);
-
-      res.writeHead(200, {'Content-type': 'application/json'})
-      var jsonString = JSON.stringify(data);
-      console.log('jsonString: ' + jsonString);
-      res.end(jsonString);
-    });
-  });
 }
 
 var doPut = function(req, res, pathArray) {
@@ -129,38 +80,12 @@ var doPut = function(req, res, pathArray) {
   // console.log(resourceName);
   switch (resourceRootName) {
     case 'users':
-      doPutUser(req, res);
+      users.doPutUser(req, res);
       break;
     default:
       res.writeHead(404, {'Content-type': 'text/plain'});
       res.end('Not Found: Not yet implemented resource: ' + resourceRootName + ' in PUT method.');
   }
-}
-
-var doPutUser = function(req, res) {
-  // bodyをゲット
-  var body = [];
-  req.on('data', function(chunk){
-    body.push(chunk);
-  }).on('end', function(){
-    body = Buffer.concat(body).toString();
-    // console.log('body: ' + body);
-    var user = JSON.parse(body);
-    // console.dir(user);
-    // console.log('user.user_name: ' + user.user_name);
-    // console.log('user.password: ' + user.password);
-
-    users.putUser(user.user_name, user.password, user.new_user_name, user.new_password, function(data, err){
-
-      console.log('data in putUser callback: ');
-      console.dir(data);
-
-      res.writeHead(200, {'Content-type': 'application/json'})
-      var jsonString = JSON.stringify(data);
-      console.log('jsonString: ' + jsonString);
-      res.end(jsonString);
-    });
-  });
 }
 
 var doDelete = function(req, res, pathArray) {
@@ -169,40 +94,13 @@ var doDelete = function(req, res, pathArray) {
   // console.log(resourceName);
   switch (resourceRootName) {
     case 'users':
-      doDeleteUser(req, res);
+      users.doDeleteUser(req, res);
       break;
     default:
       res.writeHead(404, {'Content-type': 'text/plain'});
       res.end('Not Found: Not yet implemented resource: ' + resourceRootName + ' in PUT method.');
   }
 }
-
-var doDeleteUser = function(req, res) {
-  // bodyをゲット
-  var body = [];
-  req.on('data', function(chunk){
-    body.push(chunk);
-  }).on('end', function(){
-    body = Buffer.concat(body).toString();
-    // console.log('body: ' + body);
-    var user = JSON.parse(body);
-    // console.dir(user);
-    // console.log('user.user_name: ' + user.user_name);
-    // console.log('user.password: ' + user.password);
-
-    users.deleteUser(user.user_name, user.password, function(result, message){
-
-      var body = {};
-      body.message = message;
-
-      res.writeHead(200, {'Content-type': 'application/json'})
-      var jsonString = JSON.stringify(body);
-      console.log('jsonString: ' + jsonString);
-      res.end(jsonString);
-    });
-  });
-}
-
 
 server.listen(port, function(){
   console.log('Server listening on: ' + port);
