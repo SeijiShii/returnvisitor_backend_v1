@@ -46,7 +46,7 @@ var doGet = function(req, res, pathArray, query) {
   // console.log(resourceName);
   switch (resourceRootName) {
     case 'users':
-      doGetUser(req, res, pathArray, query);
+      doGetUser(req, res, query);
       break;
     default:
       res.writeHead(404, {'Content-type': 'text/plain'});
@@ -54,12 +54,12 @@ var doGet = function(req, res, pathArray, query) {
   }
 }
 
-var doGetUser = function(req, res, pathArray, query) {
-
-  var user_name = pathArray.shift();
-  console.log('user_name: ' + user_name);
+var doGetUser = function(req, res, query) {
 
   console.dir(query);
+
+  var user_name = query.user_name;
+  console.log('user_name: ' + user_name);
 
   var password = query.password;
   console.log('password: ' + password);
