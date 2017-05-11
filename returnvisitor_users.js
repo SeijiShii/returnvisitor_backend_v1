@@ -42,6 +42,8 @@ var ERROR_HAS_DUPLICATE_NAMED_USER = 'Has duplicate named user.';
 
 ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
 
+  // callback(user, error)
+
   console.log('getUser called!');
   var queryGetData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND password = "' + password + '" AND delete_flag = false ;';
   console.log(queryGetData);
@@ -58,6 +60,8 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
         var user = rows[0];
         callback(user, null);
       } else {
+
+        // 本来なら同じ名前のユーザが存在する状態はPOSTで防止しなくてはならない。
         var err = {};
         err.message = ERROR_MESSAGE_HAS_MULTIPLE_ROWS
         console.log(err.message);
@@ -71,6 +75,7 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
 ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
 
   // callback(result, message)
+
   console.log('hasUser called!');
   console.log('Checking user with name: ' + user_name);
 
@@ -116,6 +121,9 @@ ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, cal
   });
 }
 
+var ERROR_SHORT_USER_NAME = "Error: user_name too short."
+var ERROR_SHORT_PASSWORD = "Error: password too short."
+
 // POSTが成功すればPOSTしたデータをオブジェクトで返す
 ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) {
 
@@ -128,28 +136,48 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
       console.log(err.message);
       callback(null, err);
     } else {
-      // generate user_id
-      var date = new Date();
-      var dateString = date.getTime().toString();
-      var user_id = 'user_id_' + user_name + '_' + dateString;
-      console.log('user_id: ' + user_id);
 
-      var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id, updated_at) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '",' + new Date().getTime().toString() + ' );'
-      console.log(queryPostData);
-      _client.query(queryPostData, function(err, rows){
-        console.dir(err);
-        if (rows) {
-          if (rows.info.affectedRows == 1) {
-            ReturnVisitorUsers.prototype.getUser(user_name, password, callback);
-          }
+      // ユーザ名は8文字以上か
+      if (user_name.length < 8) {
+        var err = {};
+        err.message = ERROR_SHORT_USER_NAME;
+        callback(null, err);
+
+      } else {
+
+        // パスワードは8文字以上か
+        if (password.length < 8) {
+          var err = {};
+          err.message = ERROR_SHORT_PASSWORD;
+          callback(null, err);
+
+        } else {
+
+          // generate user_id
+          var date = new Date();
+          var dateString = date.getTime().toString();
+          var user_id = 'user_id_' + user_name + '_' + dateString;
+          console.log('user_id: ' + user_id);
+
+          var queryPostData = 'INSERT INTO returnvisitor_db.users (user_name, password, user_id, updated_at) VALUES ("' + user_name + '", "' + password + '", "' + user_id + '",' + new Date().getTime().toString() + ' );'
+          console.log(queryPostData);
+          _client.query(queryPostData, function(err, rows){
+            console.dir(err);
+            if (rows) {
+              if (rows.info.affectedRows == 1) {
+                ReturnVisitorUsers.prototype.getUser(user_name, password, callback);
+              }
+            }
+          });
         }
-      });
+      }
+
       _client.end();
     }
   });
 }
 
-ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_name, new_password, callback) {
+ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_name, new_password, callback){
   ReturnVisitorUsers.prototype.hasUser(user_name, function(result, message){
 
     if (!result) {
@@ -231,10 +259,27 @@ ReturnVisitorUsers.prototype.doPostUser = function(req, res) {
       console.log('data in postUser callback: ');
       console.dir(data);
 
-      res.writeHead(200, {'Content-type': 'application/json'})
-      var jsonString = JSON.stringify(data);
-      console.log('jsonString: ' + jsonString);
-      res.end(jsonString);
+      if (data) {
+
+        // ユーザが作成された。
+        res.writeHead(201, {'Content-type': 'application/json'});
+        var jsonString = JSON.stringify(data);
+        console.log('jsonString: ' + jsonString);
+        res.end(jsonString);
+      } else {
+        if (err) {
+
+          // すべてのエラーはBAD REQUESTに至る。
+          if (err.message.equals(ERROR_HAS_DUPLICATE_NAMED_USER)
+              || err.message.equals(ERROR_SHORT_USER_NAME)
+              || err.message.equals(ERROR_SHORT_PASSWORD)) {
+            res.writeHead(400, {'Content-type': 'application/json'});
+            res.end();
+          }
+        }
+      }
+
+
     });
   });
 }
@@ -259,32 +304,6 @@ ReturnVisitorUsers.prototype.doPutUser = function(req, res) {
 
       res.writeHead(200, {'Content-type': 'application/json'})
       var jsonString = JSON.stringify(data);
-      console.log('jsonString: ' + jsonString);
-      res.end(jsonString);
-    });
-  });
-}
-
-ReturnVisitorUsers.prototype.doDeleteUser = function(req, res) {
-  // bodyをゲット
-  var body = [];
-  req.on('data', function(chunk){
-    body.push(chunk);
-  }).on('end', function(){
-    body = Buffer.concat(body).toString();
-    // console.log('body: ' + body);
-    var user = JSON.parse(body);
-    // console.dir(user);
-    // console.log('user.user_name: ' + user.user_name);
-    // console.log('user.password: ' + user.password);
-
-    ReturnVisitorUsers.prototype.deleteUser(user.user_name, user.password, function(result, message){
-
-      var body = {};
-      body.message = message;
-
-      res.writeHead(200, {'Content-type': 'application/json'})
-      var jsonString = JSON.stringify(body);
       console.log('jsonString: ' + jsonString);
       res.end(jsonString);
     });
