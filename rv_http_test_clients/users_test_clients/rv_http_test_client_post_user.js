@@ -3,7 +3,7 @@ var should = require('should');
 
 var options = {
   method: 'POST',
-  url: 'http://localhost:1337/users',
+  url: 'http://127.0.0.1:1337/users',
   json: true,
   headers: {
     'Content-type': 'application/json'
@@ -15,7 +15,7 @@ var options = {
 request(options, function (error, response, body) {
 
   console.log('body: ' + body);
-  // console.dir(error);
+  console.dir(error);
   // console.dir(response);
 
   var user = body;

@@ -1,7 +1,7 @@
 var request = require('request');
 var options = {
   method: 'GET',
-  url: 'http://localhost:1337/users/?user_name=seijishii&password=hogehoge',
+  url: 'http://127.0.0.1:1337/users/?user_name=seijishii&password=hogehoge',
   json: true
 };
 
