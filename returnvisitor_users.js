@@ -26,7 +26,7 @@
 //                パスワードのフォーマットをチェック（8文字以上）
 //                  YES パスワードのフォーマット正しい
 //                    ユーザを作成  201 CREATED　認証成功
-//                  NO パスワードのフォーマット正しくない　400 BAD REQUEST 
+//                  NO パスワードのフォーマット正しくない　400 BAD REQUEST
 //           NO  フォーマット正しくない　400 BAD REQUEST
 
 
@@ -74,7 +74,7 @@ ReturnVisitorUsers.prototype.hasUser = function(user_name, callback) {
   console.log('hasUser called!');
   console.log('Checking user with name: ' + user_name);
 
-  var queryHasData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '" AND delete_flag = false;';
+  var queryHasData = 'SELECT * FROM returnvisitor_db.users WHERE user_name = "' + user_name + '";';
   _client.query(queryHasData, function(err, rows){
 
     if (rows) {
@@ -182,40 +182,6 @@ ReturnVisitorUsers.prototype.putUser = function(user_name, password, new_user_na
       return;
     }
   });
-}
-
-ReturnVisitorUsers.prototype.deleteUser = function(user_name, password, callback) {
-  console.dir(callback);
-
-  // ユーザー名の存在確認
-  ReturnVisitorUsers.prototype.hasUser(user_name, function(result, message){
-    if (!result) {
-      callback(false, message);
-    } else {
-
-      // パスワードの照合
-      ReturnVisitorUsers.prototype.isAuthenticated(user_name, password, function(result, data, message){
-        if (!result) {
-          callback(false, message);
-        } else {
-
-          // 削除(delete_flagをTRUEにする)
-          var queryDeleteTrue = 'UPDATE returnvisitor_db.users SET delete_flag = true, updated_at = ' + new Date().getTime().toString() + ' WHERE user_name = "' + user_name + '" AND password = "' + password + '";'
-          console.log(queryDeleteTrue);
-          _client.query(queryDeleteTrue, function(err, rows){
-            if (rows) {
-              if (rows.info.affectedRows == 1) {
-                var message = 'Successfully deleted data.'
-                console.log(message);
-                callback(true, message);
-              }
-            }
-          });
-          _client.end();
-        }
-      });
-    }
-  })
 }
 
 ReturnVisitorUsers.prototype.doGetUser = function(req, res, query) {
