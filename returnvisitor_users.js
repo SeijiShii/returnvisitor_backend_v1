@@ -6,12 +6,39 @@
 // updated_at varchar(30) mysqlにはtimestampという機能があるが、クライアント側でも使用するデータのためあえて文字列
 // delete_flag tinyint(1) 要はboolean 実際に削除するのではなく削除判定とする。
 
+// ユーザー認証の流れ
+//   user_nameとpasswordをGETで送る
+//    ユーザ名は存在するか
+//      YES ユーザ名存在する
+//        パスワードは正しいか
+//          YES   202 OK
+//          NO    401 UNAHTHORIZED
+//      NO  ユーザ名存在しない  404 NOT FOUND
+//
+//    404 NOT FOUND が帰った場合：
+//      UIにてユーザの作成を提案する。
+//      POSTにてuser_nameとpasswordを送る
+//        ユーザ名のフォーマットは正しいか（8文字以上）
+//          YES フォーマット正しい
+//            ユーザ名は存在するか
+//              YES すでにそのユーザ名は存在する。　400 BAD REQUEST
+//              NO  そのユーザ名は存在しない
+//                パスワードのフォーマットをチェック（8文字以上）
+//                  YES パスワードのフォーマット正しい
+//                    ユーザを作成  201 CREATED　認証成功
+//                  NO パスワードのフォーマット正しくない　400 BAD REQUEST 
+//           NO  フォーマット正しくない　400 BAD REQUEST
+
+
 var _client;
 
 function ReturnVisitorUsers(client) {
   _client = client;
-
 }
+
+var ERROR_MESSAGE_NOT_FOUND = 'No such data.';
+var ERROR_MESSAGE_HAS_MULTIPLE_ROWS = 'Has multiple rows with the data.';
+var ERROR_HAS_DUPLICATE_NAMED_USER = 'Has duplicate named user.';
 
 ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
 
@@ -23,7 +50,7 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
     if (rows) {
       if (rows.info.numRows <= 0) {
         var err = {};
-        err.message = 'No such data.'
+        err.message = ERROR_MESSAGE_NOT_FOUND;
         console.log(err.message);
         callback(null, err);
       } else if(rows.info.numRows == 1){
@@ -32,7 +59,7 @@ ReturnVisitorUsers.prototype.getUser = function(user_name, password, callback) {
         callback(user, null);
       } else {
         var err = {};
-        err.message = 'Has multiple rows with the data.'
+        err.message = ERROR_MESSAGE_HAS_MULTIPLE_ROWS
         console.log(err.message);
         callback(null, err);
       }
@@ -84,11 +111,9 @@ ReturnVisitorUsers.prototype.isAuthenticated = function(user_name, password, cal
           console.log(message);
           callback(false, null, message);
         }
-
       });
     }
   });
-
 }
 
 // POSTが成功すればPOSTしたデータをオブジェクトで返す
@@ -99,7 +124,7 @@ ReturnVisitorUsers.prototype.postUser = function(user_name, password, callback) 
   ReturnVisitorUsers.prototype.hasUser(user_name, function(result, message){
     if (result) {
       var err = {};
-      err.message = 'Has duplicate named user.';
+      err.message = ERROR_HAS_DUPLICATE_NAMED_USER;
       console.log(err.message);
       callback(null, err);
     } else {
@@ -204,13 +229,21 @@ ReturnVisitorUsers.prototype.doGetUser = function(req, res, query) {
   console.log('password: ' + password);
 
   ReturnVisitorUsers.prototype.getUser(user_name, password, function(data, err){
+
     console.log('data in getUser callback: ');
     console.dir(data);
 
-    res.writeHead(200, {'Content-type': 'application/json'})
-    var jsonString = JSON.stringify(data);
-    console.log('jsonString: ' + jsonString);
-    res.end(jsonString);
+    if (err) {
+      if (err.message == ERROR_MESSAGE_NOT_FOUND || err.message == ERROR_MESSAGE_HAS_MULTIPLE_ROWS) {
+        res.writeHead(404, {'Content-type': 'application/json'})
+        res.end();
+      }
+    } else {
+      res.writeHead(200, {'Content-type': 'application/json'})
+      var jsonString = JSON.stringify(data);
+      console.log('jsonString: ' + jsonString);
+      res.end(jsonString);
+    }
   });
 }
 
