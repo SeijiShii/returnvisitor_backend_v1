@@ -50,7 +50,9 @@ var doGet = function(req, res, pathArray, query) {
   // console.log(resourceName);
   switch (resourceRootName) {
     case 'users':
-      users.doGetUser(req, res, query);
+      // users.doGetUser(req, res, query);
+      // 'users'の場合は認証メソッドをコール
+      users.doAuthentication(req, res, query);
       break;
     default:
       res.writeHead(404, {'Content-type': 'text/plain'});
